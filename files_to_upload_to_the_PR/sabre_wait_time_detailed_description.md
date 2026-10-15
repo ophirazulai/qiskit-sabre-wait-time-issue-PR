@@ -75,7 +75,32 @@ Without decay: H_old(s) = C(π_s) − C(π)
 With decay:    H_old(s) = max(decay[a], decay[b]) × C(π_s)
 ```
 
-The first form uses SABRE's relative distance updates. Subtracting the common `C(π)` preserves the candidate ranking. With decay, the code restores the absolute cost before applying the candidate-dependent multiplier. The wait-time penalty is added after either calculation and is not multiplied by decay.
+Here `H_old` means the existing score for the **selected heuristic configuration**, before adding wait time. It does not mean the sum of `H_basic`, `H_lookahead`, and `H_decay`: lookahead already includes the front-layer term, and decay multiplies the combined distance cost.
+
+If the weights and scaling are configured to match the conventional formulas in the background section, the relationship is:
+
+```text
+B₀ = A(F, π)
+L₀ = A(F, π) / |F| + W × A(E, π) / |E|
+
+Basic:     H_old(s) = H_basic(s) − B₀
+Lookahead: H_old(s) = H_lookahead(s) − L₀
+Decay:     H_old(s) = H_decay(s)
+```
+
+`B₀` and `L₀` evaluate the current layout before the candidate SWAP, using the same interaction sets and weights as the candidate scores. They are constant across candidates at that decision. Subtracting them preserves both the candidate ranking and score differences, so using a relative score also preserves the effect of adding the wait-time penalty.
+
+For decay, the code restores the absolute distance cost before multiplying by `d_s`. Using `d_s × [C(π_s) − C(π)]` would subtract `d_s × C(π)`, which varies between candidates when their decay multipliers differ and can change their ranking.
+
+The exact string presets at the reviewed parent use the scaling listed in the background table. Writing `ΔA(S) = A(S, π_s) − A(S, π)`, their implemented scores are:
+
+```text
+basic:     H_old(s) = ΔA(F) / |F|
+lookahead: H_old(s) = ΔA(F) + (0.5 / N) × ΔA(E₁)
+decay:     H_old(s) = d_s × [A(F, π_s) + (0.5 / N) × A(E₁, π_s)]
+```
+
+These are the `H_old` values to which this commit adds `λ × max(r[a], r[b])`. The wait-time penalty is added after the selected distance/decay calculation and is not multiplied by decay. Unlike subtracting a common baseline, rescaling the distance terms changes their strength relative to the fixed wait-time coefficient, so the conventional and preset normalizations should not be interchanged when evaluating `H_new`.
 
 The coefficient is fixed in this commit. It is small enough to favor early availability when distance costs are close, but it is an additive score term: a sufficiently large ready-time difference can outweigh a nonzero distance/lookahead advantage. Candidates still within `best_epsilon` (default `1e-10`) of the best score are selected using the existing seeded random choice.
 
