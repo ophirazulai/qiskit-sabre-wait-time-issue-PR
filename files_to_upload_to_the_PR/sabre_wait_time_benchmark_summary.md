@@ -54,10 +54,3 @@ Runtime measures one wall-clock `pm.run(circuit)` call per invocation, without w
 | Combined | 100 | 1.0102 (+1.0%) | 1.0864 (+8.6%) |
 
 The geometric mean weights cases equally, whereas the summed-time ratio is dominated by expensive circuits. The report notes a few percent of timing noise, including on all-to-all cases without routing. The data do not establish a precise 1% implementation overhead.
-
-## Available artifacts and limits
-
-- The two full Markdown reports are copied unchanged into this attachment folder, preserving their tables and wording.
-- The Benchpress source links `tables/paired_seeds.csv`, `tables/cases.csv` and `report.md` are references to its original report bundle. Those files were not supplied here, so those links do not resolve in this package.
-- No new confidence interval, combined score, or L2/L3-only Qiskit aggregate has been inferred from the extracts. Reconstructing weighted estimates requires the original manifest/weights and paired data.
-- Benchpress has only three paired seeds per case. Local mechanism tests and successful invocations do not establish universal depth improvement or hardware runtime/fidelity gains.

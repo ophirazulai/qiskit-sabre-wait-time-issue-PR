@@ -1,0 +1,4 @@
+**TL;DR:** This change adds a small physical-wire ready-time penalty to SABRE’s SWAP scoring, favoring SWAPs that can overlap existing work and reduce two-qubit depth. It tracks when each wire becomes available after routed two-qubit operations and inserted SWAPs. When distance scores are equal or close, this favors idle wires over busy ones. Decay discourages repeatedly using the same wires for SWAPs; the new term also accounts for wires occupied by routed two-qubit gates, which decay does not track.
+
+- **[Qiskit benchmarks](files_to_upload_to_the_PR/wait-time-aware-swap-scoring---qiskit-benchmarks.md):** **21.80% lower two-qubit depth** and **6.19% fewer two-qubit gates**.
+- **[Benchpress runtime](files_to_upload_to_the_PR/wait-time-aware-swap-scoring---benchpress.md#runtime-ratio):** **1.0% overhead** by geometric mean (ratio 1.0102) across 100 cases at optimization levels 2 and 3.
