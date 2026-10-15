@@ -4,6 +4,59 @@ Implementation: `ffcdb2c81a30f32f33786fbc0351ef9f4aeac2d1`, against parent `1298
 
 The change gives SABRE a small preference for routing SWAPs that can start earlier on their physical wires. A SWAP on idle wires can overlap previously routed gates, even when another SWAP offers the same distance improvement. The implementation adds this preference to candidate scoring and maintains the corresponding ready-time state throughout the search.
 
+## Background: SABRE and its existing scoring formulas
+
+SABRE routes a quantum circuit onto a device's coupling graph by inserting SWAPs. A layout `π` maps logical qubits to physical wires. A two-qubit interaction can execute when its predecessors have been routed and its mapped wires are adjacent. Otherwise, SABRE scores candidate SWAPs on coupling edges touching qubits in the front layer, chooses a lowest-scoring candidate, updates the layout, and repeats. Qiskit's implementation includes LightSABRE improvements and can run multiple seeded trials, selecting a result with the fewest inserted SWAPs. See the [Qiskit SABRE overview](https://quantum.cloud.ibm.com/docs/en/api/qiskit/qiskit.transpiler.passes.SabreSwap).
+
+The baseline below is the parent commit cited above, before the wait-time addition. Define:
+
+- `F`: the front layer of pending two-qubit interactions whose predecessors have been routed.
+- `E`: a lookahead set of upcoming two-qubit interactions.
+- `D[u, v]`: the shortest-path distance between physical wires `u` and `v` in the routing coupling graph; adjacent wires have distance 1.
+- `π_s`: the layout that would result from candidate SWAP `s = (a, b)`.
+- `d_s = max(decay[a], decay[b])`: the candidate's decay multiplier.
+- `W`: the relative lookahead weight; `|S|` denotes the number of interactions in set `S`.
+
+For any interaction set `S`, write its total distance as:
+
+```text
+A(S, π) = Σ over g in S of D[π(g.q₁), π(g.q₂)]
+```
+
+The conventional basic, lookahead, and decay scores are:
+
+```text
+H_basic(s)     = A(F, π_s)
+H_lookahead(s) = A(F, π_s) / |F| + W × A(E, π_s) / |E|
+H_decay(s)     = d_s × [A(F, π_s) / |F| + W × A(E, π_s) / |E|]
+```
+
+An empty lookahead set contributes zero. Lower scores are preferred: the basic term brings front-layer interactions closer to execution, the lookahead term anticipates later interactions, and decay discourages repeatedly using the same physical wires. These are the [formulas presented in Qiskit's API documentation](https://quantum.cloud.ibm.com/docs/en/api/qiskit/qiskit.transpiler.passes.SabreSwap); the implementation at the reviewed parent uses configurable weights and scaling, so its exact presets require the distinction below.
+
+### Exact distance cost at the reviewed parent
+
+The implementation supports several lookahead layers `E₁, …, Eₖ`, each with its own weight `w_j`, and a front-layer weight `w_F`. Its general distance cost is:
+
+```text
+C(π) = w_F × α(F) × A(F, π)
+       + Σ over j = 1…k of w_j × α(E_j) × A(E_j, π)
+
+α(S) = 1       for SetScaling.Constant
+α(S) = 1 / |S| for SetScaling.Size, with an empty set contributing zero
+```
+
+Front-layer and lookahead scaling are configured separately. The `SabreSwap` string presets at this parent are:
+
+| Preset | Distance cost `C(π)` | Decay |
+| --- | --- | --- |
+| `basic` | `A(F, π) / \|F\|` | Disabled |
+| `lookahead` | `A(F, π) + (0.5 / N) × A(E₁, π)` | Disabled |
+| `decay` | `A(F, π) + (0.5 / N) × A(E₁, π)` | Enabled |
+
+Here `N` is the number of physical qubits in the coupling map. In particular, these lookahead and decay presets use one lookahead layer and constant scaling, rather than dividing each term by its interaction-set size. The basic preset's normalization preserves its distance-only candidate ranking, but the scale matters when adding the wait-time term. These settings come from the [parent's preset constructors](https://github.com/AI-native-Systems-Research/qiskit-evolved/blob/1298f960b7e814cfcb6aa9338b548ec5c6d2b355/qiskit/transpiler/passes/routing/sabre_swap.py) and [heuristic definitions](https://github.com/AI-native-Systems-Research/qiskit-evolved/blob/1298f960b7e814cfcb6aa9338b548ec5c6d2b355/crates/transpiler/src/passes/sabre/heuristic.rs).
+
+For the decay preset, all wire multipliers start at 1. The router adds `0.001` to each selected SWAP endpoint's multiplier, except on every fifth search SWAP, when it resets all multipliers to 1 instead. It also resets them after routing progress. Decay therefore tracks recent wire reuse; it does not estimate when each wire becomes available. The [parent's routing implementation](https://github.com/AI-native-Systems-Research/qiskit-evolved/blob/1298f960b7e814cfcb6aa9338b548ec5c6d2b355/crates/transpiler/src/passes/sabre/route.rs) evaluates distance changes for efficiency and restores the absolute cost before applying decay, as detailed next.
+
 ## 1. The score
 
 For a candidate SWAP on physical wires `a` and `b`, let `H_old(a, b)` be the score already computed by SABRE, including decay when enabled. The new score is:
