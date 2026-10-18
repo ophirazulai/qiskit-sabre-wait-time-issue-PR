@@ -222,16 +222,6 @@ Missing or invalid seed pairs make that metric unavailable. Percentages with a z
 | confirm/qaoa_ba_n100_3reps/heavy_hex_d9_cx/L2 | 100 | 1526.66 | 1281.35 | +16.07% | 8591.44 | 8990.44 | -4.64% |
 | confirm/qaoa_ba_n100_3reps/heavy_hex_d9_ecr/L2 | 100 | 1531.56 | 1284.71 | +16.12% | 8610.32 | 9005.52 | -4.59% |
 
-## Quality estimates
-
-| Panel | Ratio | Paired SE (log) | Upper 2 SE | Seeds |
-| --- | ---: | ---: | ---: | ---: |
-| CA2/improvement | 0.781982 | 0.001483 | -0.242957 | 100 |
-| CA3/primary/N2 | 0.938118 | 0.001282 | -0.061315 | 100 |
-| CA3/cx/D2 | 0.867647 | 0.005356 | -0.131258 | 100 |
-| CA3/cx/N2 | 0.996419 | 0.002598 | 0.001608 | 100 |
-| CA3/ecr/D2 | 0.868233 | 0.005357 | -0.130580 | 100 |
-| CA3/ecr/N2 | 0.997139 | 0.002629 | 0.002393 | 100 |
 
 ## Marginal quality estimates
 
