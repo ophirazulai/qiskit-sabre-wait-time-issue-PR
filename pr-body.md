@@ -4,16 +4,18 @@ Fix #ISSUE_NUMBER
 
 ### Summary
 
-SABRE can assign equal distance scores to SWAPs with different opportunities to overlap already-routed work. This change tracks estimated physical-wire ready times and adds a small penalty for SWAPs whose wires become available later. On the issue's four-qubit example, choosing the idle pair gives CX depth 5 instead of 8 with the same single routing SWAP, before gate cancellation.
+SABRE can assign equal distance scores to SWAPs with different opportunities to overlap already-routed work. This change adds an optional "wait time" component to the SABRE heuristic. It tracks estimated physical-wire ready times and adds a small penalty for SWAPs whose wires become available later. The component is disabled by default. On the issue's four-qubit example, `SabreSwap(heuristic="wait_time")` chooses the idle pair and gives CX depth 5 instead of 8 with the same single routing SWAP, before gate cancellation.
 
 ### Changes
 
-- Add `2.2e-5 * max(ready[a], ready[b])` to each candidate SWAP's score after decay. The term can also outweigh small distance/lookahead differences; the coefficient is fixed.
-- Advance physical-wire ready times by one layer per routed two-qubit SABRE node and three layers per inserted SWAP, including the initially routed prefix and fallback SWAPs. Restore ready times when the release valve rolls back an unsuccessful search.
-- Add `wait_time=True` to the internal `qiskit._accelerate.sabre.Heuristic`, preserving the setting through builders, pickling, copying, equality and representation. `wait_time=False` disables the score term. Python SABRE defaults inherit it, and the Rust transpiler and standalone C SABRE layout constructors enable it explicitly.
-- Add regression coverage for idle-wire preference, the lookahead crossover, opt-out and serialization; exercise the release valve with the flag on and off. Update deterministic layout expectations and add a release note.
+- Add a `WaitTimeHeuristic(weight)` component to the internal `qiskit._accelerate.sabre.Heuristic`, set with `with_wait_time(weight)` or the new `wait_time` constructor argument. It defaults to `None` (disabled) and is preserved through builders, pickling, copying, equality and representation.
+- When enabled, add `weight * max(ready[a], ready[b])` to each candidate SWAP's score after decay, so the term is not scaled by the decay multiplier. It acts as a tie-break and can outweigh small distance/lookahead differences.
+- When enabled, advance physical-wire ready times by one layer per routed two-qubit SABRE node and three layers per inserted SWAP, including the initially routed prefix and fallback SWAPs. Restore ready times when the release valve rolls back an unsuccessful search. When disabled, no ready times are tracked.
+- Add a `heuristic="wait_time"` option to `SabreSwap`: the `"decay"` preset plus `with_wait_time(2.2e-5)`.
+- Leave the existing `SabreSwap` heuristics, `SabreLayout`, the preset pass managers, the Rust transpiler and the standalone C SABRE layout unchanged; their heuristic constructors pass `None` for the new component.
+- Add tests for idle-wire preference, the lookahead crossover (including a non-default weight and the component disabled), ready-time restoration after the release valve, unitary equivalence and connectivity of routed circuits, a zero weight matching `"decay"` exactly, and serialization. Run the existing infinite-loop test with and without the component and the existing per-heuristic tests with `"wait_time"`. Add a release note.
 
-The ready-time estimate counts contracted two-qubit nodes, so it does not model native gate durations or a complete control-flow schedule. Routing trial selection still minimizes SWAP count. The opt-out is on the internal heuristic object; no new public keyword is added to `SabreSwap` or `SabreLayout`.
+The ready-time estimate counts contracted two-qubit nodes, so it does not model native gate durations or a complete control-flow schedule. Routing trial selection still minimizes SWAP count.
 
 ### Benchmark results
 
