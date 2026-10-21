@@ -49,6 +49,26 @@ Benchpress compares `sabre-wait-time-aware-swap-scoring` @ `ffcdb2c81` against p
 The [Benchpress report](files_to_upload_to_the_PR/wait-time-aware-swap-scoring---benchpress.md) measures **1.0% runtime overhead** by geometric mean (ratio 1.0102) across 100 cases at optimization levels 2 and 3.
 
 
+### Validation
+
+A separate correctness check confirms that routing with the wait-time heuristic preserves circuit semantics. It passed **96/96 cases and 2/2 self-checks**. 
+
+**Setup.** 16 ten-qubit circuits, mostly built with Qiskit's own `test/benchmarks` builders, are each routed with 6 seeds (`0, 1, 42, 2, 7, 123`). The circuits are QFT, quantum volume (two seeds), random circuits of depth 20/40/60, ring, DTC, Bernstein-Vazirani and a BV-like variant, Trotter, QAOA, Grover, MCX, a ripple-carry adder and a modular adder. Each circuit is routed onto a bidirectional 10-qubit line, the most constrained connectivity, by `TrivialLayout` → `ApplyLayout` → `SabreSwap(heuristic="wait_time", trials=1)`. A single trial makes each run deterministic, and the check runs with `QISKIT_PARALLEL=FALSE`.
+
+**Input preparation.** Final measurements are removed, QAOA parameters are bound to fixed values, and gates on three or more qubits are unrolled. The prepared input must have 10 qubits and only one- and two-qubit instructions. Its 1024×1024 unitary is the reference for every seed.
+
+**Checks per case.** A routed circuit passes only if all four hold:
+
+1. The width is still 10 qubits; no ancillas are added and no qubits are dropped.
+2. The initial and final layout metadata are both present.
+3. Every non-directive two-qubit instruction acts on a coupling-map edge.
+4. `Operator.from_circuit(out)`, which uses the layout to undo the initial placement and the final SWAP permutation, equals the reference. The comparison uses default `np.allclose` tolerances and keeps the global phase.
+
+References:
+- [Validation script (`run_validation.py`)](https://github.com/AI-native-Systems-Research/qiskit-sabre-wait-time-validation/blob/codex/validation-simplified/run_validation.py)
+- [Validation report (`report.md`)](https://github.com/AI-native-Systems-Research/qiskit-sabre-wait-time-validation/blob/codex/validation-simplified/report.md)
+
+
 ### Supporting documents
 
 1. [How the score works](files_to_upload_to_the_PR/sabre_wait_time_detailed_description.md): `sabre_wait_time_detailed_description.md`.
