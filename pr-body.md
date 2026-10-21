@@ -17,7 +17,6 @@ SABRE can assign equal distance scores to SWAPs with different opportunities to 
 
 The ready-time estimate counts contracted two-qubit nodes, so it does not model native gate durations or a complete control-flow schedule. Routing trial selection still minimizes SWAP count.
 
-### Benchmark results
 
 #### Qiskit benchmarks
 
@@ -77,6 +76,7 @@ References:
 2. [Benchmark summary and limitations](files_to_upload_to_the_PR/sabre_wait_time_benchmark_summary.md): `sabre_wait_time_benchmark_summary.md`.
 3. [Benchpress per-case results](files_to_upload_to_the_PR/wait-time-aware-swap-scoring---benchpress.md): `wait-time-aware-swap-scoring---benchpress.md`.
 4. [Qiskit benchmark extract](files_to_upload_to_the_PR/wait-time-aware-swap-scoring---qiskit-benchmarks.md): `wait-time-aware-swap-scoring---qiskit-benchmarks.md`.
+5. [Slides: background, equations and a worked example](files_to_upload_to_the_PR/sabre_wait_time.pdf): `sabre_wait_time.pdf`.
 
 
 ### AI/LLM disclosure
