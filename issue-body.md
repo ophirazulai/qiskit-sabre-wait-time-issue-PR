@@ -24,16 +24,16 @@ With a three-CX SWAP decomposition and unit CX durations:
 | SWAP `(1, 2)` | Four-CX prefix, then three-CX SWAP, then final CX | 8 | 8 |
 | SWAP `(2, 3)` | Prefix and SWAP in parallel, then final CX | 8 | 5 |
 
-This is a routing-only example, before gate cancellation; the repeated CX prefix can cancel during later optimization. The existing random tie can already choose the shallower route. The proposed score makes it prefer that route across seeds.
+This is a routing-only example, before gate cancellation; the repeated CX prefix can cancel during later optimization. The existing random tie can already choose the shallower route. With the proposed component enabled, SABRE prefers that route across seeds.
 
 The proposed change would:
 
 - Track a ready time for each physical wire, counting each routed two-qubit SABRE node as one layer and each inserted SWAP as three layers.
-- Add `2.2e-5 * max(ready[a], ready[b])` to the existing score for candidate SWAP `(a, b)`, after the optional decay multiplier. This can resolve equal scores and outweigh sufficiently small lookahead differences.
+- Add `weight * max(ready[a], ready[b])` to the existing score for candidate SWAP `(a, b)`, after the optional decay multiplier. With a small weight (for example `2.2e-5`), this resolves equal scores and can outweigh sufficiently small lookahead differences.
 - Restore ready times when an unsuccessful SWAP search is rolled back, and update them for the fallback route.
-- Enable the term by default, with an opt-out through the internal `qiskit._accelerate.sabre.Heuristic(wait_time=False)` configuration passed to `SabreSwap`.
+- Make the term an optional heuristic component, disabled by default: a `WaitTimeHeuristic(weight)` on the internal `qiskit._accelerate.sabre.Heuristic` (via `with_wait_time(weight)`), plus a `SabreSwap(heuristic="wait_time")` preset that adds it to `"decay"` with weight `2.2e-5`. Existing heuristics, `SabreLayout` and the preset pass managers would be unchanged.
 
-`ready[]` starts at zero for every physical wire in each routing trial. It is updated as follows:
+When the component is enabled, `ready[]` starts at zero for every physical wire in each routing trial. It is updated as follows:
 
 - For each routed two-qubit SABRE node, map its qubits to physical wires `(a, b)` using the current layout, then set both `ready[a]` and `ready[b]` to `max(ready[a], ready[b]) + 1`. This includes nodes routed before the first SWAP and those made executable by later SWAPs.
 - For each applied SWAP `(a, b)`, set both entries to `max(ready[a], ready[b]) + 3`. Other wires retain their values. The entries stay attached to physical wires; they are not exchanged when the layout changes.
