@@ -1,8 +1,6 @@
 ### What should we add?
 
-Include estimated physical-wire availability in SABRE's candidate SWAP score, so routing can favor SWAPs that overlap work already routed on other wires.
-
-The existing distance and lookahead terms can give the same score to two SWAPs even when one must follow a busy sequence and the other can run in parallel with it. Decay discourages repeated use of SWAP wires, but does not track when those wires become available after routed two-qubit operations.
+I'd like to add an optional wait-time term to SABRE's SWAP scoring, so it can prefer SWAPs on wires that become available earlier. The distance and lookahead scores can tie even when one SWAP must wait for earlier gates and another can run in parallel with them. Decay discourages repeated use of SWAP wires, but doesn't track their availability after routed two-qubit gates.
 
 For example, start with the identity layout on the line `0—1—2—3`:
 
@@ -15,43 +13,14 @@ for _ in range(4):
 qc.cx(1, 3)
 ```
 
-The final CX needs routing. Swapping either `(1, 2)` or `(2, 3)` makes it executable, with the same distance improvement. The first SWAP uses wire 1, which is occupied by the four preceding CX gates. The second uses idle wires and can overlap that work.
+Either SWAP `(1, 2)` or `(2, 3)` makes the final CX executable. The first has to wait for the four CX gates on wire 1; the second can run alongside them. With three CX gates per SWAP and unit CX durations, both routes use eight CX gates, but their CX depths are eight and five respectively. This example is before optimization, which can cancel the repeated CX gates. SABRE can already choose the shallower route by random tie-breaking; the new term would give it a preference for that route.
 
-With a three-CX SWAP decomposition and unit CX durations:
+The idea is to track a ready time for each physical wire and add `weight * max(ready[a], ready[b])` to the score for SWAP `(a, b)`, after decay. A small weight would favor earlier availability when distance scores are equal or close. The estimate would count each contracted two-qubit SABRE node as one layer and each SWAP as three. The four-CX prefix above counts as one such node, so these ready times are only a rough estimate of scheduling, not hardware durations.
 
-| Routing choice | Schedule | CX count | CX depth |
-| --- | --- | ---: | ---: |
-| SWAP `(1, 2)` | Four-CX prefix, then three-CX SWAP, then final CX | 8 | 8 |
-| SWAP `(2, 3)` | Prefix and SWAP in parallel, then final CX | 8 | 5 |
+I'd expose this as `SabreSwap(heuristic="wait_time")`, adding the term to the existing `"decay"` heuristic. It would be disabled by default.
 
-This is a routing-only example, before gate cancellation; the repeated CX prefix can cancel during later optimization. The existing random tie can already choose the shallower route. With the proposed component enabled, SABRE prefers that route across seeds.
-
-The proposed change would:
-
-- Track a ready time for each physical wire, counting each routed two-qubit SABRE node as one layer and each inserted SWAP as three layers.
-- Add `weight * max(ready[a], ready[b])` to the existing score for candidate SWAP `(a, b)`, after the optional decay multiplier. With a small weight (for example `2.2e-5`), this resolves equal scores and can outweigh sufficiently small lookahead differences.
-- Restore ready times when an unsuccessful SWAP search is rolled back, and update them for the fallback route.
-- Make the term an optional heuristic component, disabled by default: a `WaitTimeHeuristic(weight)` on the internal `qiskit._accelerate.sabre.Heuristic` (via `with_wait_time(weight)`), plus a `SabreSwap(heuristic="wait_time")` preset that adds it to `"decay"` with weight `2.2e-5`. Existing heuristics, `SabreLayout` and the preset pass managers would be unchanged.
-
-When the component is enabled, `ready[]` starts at zero for every physical wire in each routing trial. It is updated as follows:
-
-- For each routed two-qubit SABRE node, map its qubits to physical wires `(a, b)` using the current layout, then set both `ready[a]` and `ready[b]` to `max(ready[a], ready[b]) + 1`. This includes nodes routed before the first SWAP and those made executable by later SWAPs.
-- For each applied SWAP `(a, b)`, set both entries to `max(ready[a], ready[b]) + 3`. Other wires retain their values. The entries stay attached to physical wires; they are not exchanged when the layout changes.
-- Scoring a candidate does not change `ready[]`. Applied SWAPs save the previous values so a failed search can restore them in reverse order; fallback SWAPs then use the same update rule.
-
-The estimate operates on SABRE's contracted interaction graph: the four-CX prefix above counts as one internal node. It is a lightweight two-qubit scheduling proxy, not a prediction of hardware duration. Routing trials would still be selected by SWAP count.
-
-### Initial benchmark evidence
-
-The supplied [Qiskit benchmarks report](files_to_upload_to_the_PR/wait-time-aware-swap-scoring---qiskit-benchmarks.md) reports **21.80% lower two-qubit depth** and **6.19% fewer two-qubit gates** on its primary panel. 
-
-The separate [Benchpress report](files_to_upload_to_the_PR/wait-time-aware-swap-scoring---benchpress.md) measures **1.0% runtime overhead** by geometric mean (ratio 1.0102) across 100 cases at optimization levels 2 and 3.
-
-### Supporting documents
-
-The PR materials include a description of the score and state updates, reproducible examples, and both supplied benchmark reports. The Qiskit benchmark extract does not identify its baseline or candidate revision; its results need that provenance before being attributed to this commit.
-
+On a collection of Qiskit's benchmarks, this gave 21.80% lower two-qubit depth and 6.19% fewer two-qubit gates, at 1.0% higher runtime.
 
 ### AI disclosure
 
-I developed this as part of IBM Research's Spotlights project on AI-native software optimization; I used Claude Code (Claude Opus 5.5) and OpenAI Codex (GPT-6 Sol) to develop, test and review the implementation.
+I developed this as part of IBM Research's Spotlights project on AI-native software optimization. I used Claude Code and OpenAI Codex to develop, test and review the implementation.
