@@ -14,7 +14,8 @@ The [Qiskit benchmark](files_to_upload_to_the_PR/wait-time-aware-swap-scoring---
 
 ### Validation
 
-A [validation run](https://github.com/AI-native-Systems-Research/qiskit-sabre-wait-time-validation/blob/codex/validation-simplified/report.md) passed all 96 cases: 16 ten-qubit circuits, each routed onto a line with six seeds. It checks unitary equivalence with layout correction, width, layout metadata and connectivity. Both negative controls also passed. The [script](https://github.com/AI-native-Systems-Research/qiskit-sabre-wait-time-validation/blob/codex/validation-simplified/run_validation.py) is available with the report.
+A [validation run](https://github.com/AI-native-Systems-Research/qiskit-sabre-wait-time-validation/blob/codex/validation-simplified/report.md) passed all 878 configurations: 20 circuits with 2–10 qubits, tested across multiple topologies, layouts and seeds. It checks unitary equivalence with layout correction, width, layout metadata and connectivity, and confirms that enabling wait-time scoring changes routing in tested cases. Both negative controls also passed. The [script](https://github.com/AI-native-Systems-Research/qiskit-sabre-wait-time-validation/blob/codex/validation-simplified/run_validation.py) is available with the report.
+
 
 ### AI/LLM disclosure
 
