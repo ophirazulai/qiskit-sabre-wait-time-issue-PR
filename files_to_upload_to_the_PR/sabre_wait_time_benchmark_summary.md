@@ -1,6 +1,6 @@
 # SABRE wait-time scoring: supplied benchmark evidence
 
-The [Qiskit benchmark extract](wait-time-aware-swap-scoring---qiskit-benchmarks.md) contains no revision identifiers. The [Benchpress report](wait-time-aware-swap-scoring---benchpress.md) explicitly compares candidate `ffcdb2c81` against its parent `1298f960b`. Both are included as supplied; the benchmark suites were not rerun while preparing these materials.
+The [Qiskit benchmark extract](https://github.com/ophirazulai/qiskit-sabre-wait-time-issue-PR/blob/main/files_to_upload_to_the_PR/wait-time-aware-swap-scoring---qiskit-benchmarks.md) contains no revision identifiers. The [Benchpress report](https://github.com/ophirazulai/qiskit-sabre-wait-time-issue-PR/blob/main/files_to_upload_to_the_PR/wait-time-aware-swap-scoring---benchpress.md) explicitly compares candidate `ffcdb2c81` against its parent `1298f960b`. Both are included as supplied; the benchmark suites were not rerun while preparing these materials.
 
 `D2` denotes two-qubit depth and `N2` two-qubit gate count. Ratios below are candidate/baseline, so values below one are improvements. Signed percentage changes use `100 * (ratio - 1)`: negative is better. The Qiskit source uses the opposite sign when labeling a percentage as an "improvement".
 

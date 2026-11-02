@@ -4,13 +4,13 @@ SABRE can give two SWAPs the same distance score even when one must wait for ear
 
 For a candidate SWAP `(a, b)`, the new term adds `weight * max(ready[a], ready[b])` to the score after decay. The preset uses a weight of `2.2e-5`. This favors earlier availability when distance scores are equal.
 
-Ready times advance by one layer per routed two-qubit SABRE node and three per inserted SWAP. They are restored when there is roll back. The [detailed description](files_to_upload_to_the_PR/sabre_wait_time_detailed_description.md) and [slides](files_to_upload_to_the_PR/sabre_wait_time.pptx) includes examples.
+Ready times advance by one layer per routed two-qubit SABRE node and three per inserted SWAP. They are restored when there is roll back. The [detailed description](https://github.com/ophirazulai/qiskit-sabre-wait-time-issue-PR/blob/main/files_to_upload_to_the_PR/sabre_wait_time_detailed_description.md) and [slides](https://github.com/ophirazulai/qiskit-sabre-wait-time-issue-PR/blob/main/files_to_upload_to_the_PR/sabre_wait_time.pdf) includes examples.
 
 ### Benchmarks
 
-The [Qiskit benchmark](files_to_upload_to_the_PR/wait-time-aware-swap-scoring---qiskit-benchmarks.md) reports weighted geometric reductions of 21.80% in two-qubit depth and 6.19% in two-qubit gate count.
+The [Qiskit benchmark](https://github.com/ophirazulai/qiskit-sabre-wait-time-issue-PR/blob/main/files_to_upload_to_the_PR/wait-time-aware-swap-scoring---qiskit-benchmarks.md) reports weighted geometric reductions of 21.80% in two-qubit depth and 6.19% in two-qubit gate count.
 
-[Benchpress](files_to_upload_to_the_PR/wait-time-aware-swap-scoring---benchpress.md) reports 3.6% lower two-qubit depth, 0.5% fewer two-qubit gates and 1.0% higher runtime on a 100-case panel at optimization levels 2 and 3, with three seeds per case.
+[Benchpress](https://github.com/ophirazulai/qiskit-sabre-wait-time-issue-PR/blob/main/files_to_upload_to_the_PR/wait-time-aware-swap-scoring---benchpress.md) reports 3.6% lower two-qubit depth, 0.5% fewer two-qubit gates and 1.0% higher runtime on a 100-case panel at optimization levels 2 and 3, with three seeds per case.
 
 ### Validation
 
