@@ -1,3 +1,5 @@
+Fixes #17394
+
 This adds `SabreSwap(heuristic="wait_time")`, which extends the `"decay"` heuristic to account for when a SWAP's physical wires become available. The new term is disabled by default.
 
 SABRE can give two SWAPs the same distance score even when one must wait for earlier gates and the other can run alongside them. Decay discourages repeated use of SWAP wires, but does not track their availability after routed gates. In the issue's four-qubit example, preferring the idle pair gives CX depth 5 instead of 8 with the same single SWAP, before gate cancellation.
