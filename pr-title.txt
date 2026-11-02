@@ -1,1 +1,1 @@
-Add configurable wire wait-time scoring to SABRE
+Add wire availability term to SABRE SWAP scoring

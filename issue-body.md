@@ -19,7 +19,7 @@ The idea is to track a ready time for each physical wire and add `weight * max(r
 
 I'd expose this as `SabreSwap(heuristic="wait_time")`, adding the term to the existing `"decay"` heuristic. It would be disabled by default.
 
-On a collection of Qiskit's benchmarks, this gave 21.80% lower two-qubit depth and 6.19% fewer two-qubit gates, at 1.0% higher runtime.
+On a collection of Qiskit's benchmarks, this gave 21.80% lower two-qubit depth and 6.19% fewer two-qubit gates. Transpile time on Benchpress increased by 1.0%.
 
 ### AI disclosure
 

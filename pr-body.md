@@ -4,7 +4,7 @@ SABRE can give two SWAPs the same distance score even when one must wait for ear
 
 For a candidate SWAP `(a, b)`, the new term adds `weight * max(ready[a], ready[b])` to the score after decay. The preset uses a weight of `2.2e-5`. This favors earlier availability when distance scores are equal.
 
-Ready times advance by one layer per routed two-qubit SABRE node and three per inserted SWAP. They are restored when there is roll back. The [detailed description](https://github.com/ophirazulai/qiskit-sabre-wait-time-issue-PR/blob/main/files_to_upload_to_the_PR/sabre_wait_time_detailed_description.md) and [slides](https://github.com/ophirazulai/qiskit-sabre-wait-time-issue-PR/blob/main/files_to_upload_to_the_PR/sabre_wait_time.pdf) includes examples.
+Ready times advance by one layer per routed two-qubit SABRE node and three per inserted SWAP. They are restored on rollback. The [detailed description](https://github.com/ophirazulai/qiskit-sabre-wait-time-issue-PR/blob/main/files_to_upload_to_the_PR/sabre_wait_time_detailed_description.md) and [slides](https://github.com/ophirazulai/qiskit-sabre-wait-time-issue-PR/blob/main/files_to_upload_to_the_PR/sabre_wait_time.pdf) include examples.
 
 ### Benchmarks
 
